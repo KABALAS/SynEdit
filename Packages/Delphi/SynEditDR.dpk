@@ -138,6 +138,7 @@ contains
   SynUsp10 in '..\..\Source\SynUsp10.pas' {$ENDIF},
   SynEditHighlighterOptions in '..\..\Source\SynEditHighlighterOptions.pas',
   SynHighlighterJSON in '..\..\Source\SynHighlighterJSON.pas',
-  SynHighlighterRexx in '..\..\Source\SynHighlighterRexx.pas';
+  SynHighlighterRexx in '..\..\Source\SynHighlighterRexx.pas',
+  SynEditCodeFolding in '..\..\Source\SynEditCodeFolding.pas';
 
 end.

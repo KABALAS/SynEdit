@@ -115,6 +115,7 @@
 #include <SynEditHighlighterOptions.hpp>
 #include <SynHighlighterJSON.hpp>
 #include <SynHighlighterRexx.hpp>
+#include <SynEditCodeFolding.hpp>
 #include <System.Types.hpp>	// (rtl)
 #include <System.UITypes.hpp>	// (rtl)
 #include <Winapi.Windows.hpp>	// (rtl)
@@ -133,9 +134,9 @@
 #include <Winapi.ActiveX.hpp>	// (rtl)
 #include <System.Generics.Collections.hpp>	// (rtl)
 #include <System.Hash.hpp>	// (rtl)
+#include <System.Math.hpp>	// (rtl)
 #include <System.Rtti.hpp>	// (rtl)
 #include <System.TypInfo.hpp>	// (rtl)
-#include <System.Math.hpp>	// (rtl)
 #include <System.Generics.Defaults.hpp>	// (rtl)
 #include <System.Classes.hpp>	// (rtl)
 #include <Winapi.Wincodec.hpp>	// (rtl)

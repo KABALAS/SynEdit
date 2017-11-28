@@ -37,6 +37,7 @@
 #include <SynEditKeyCmds.hpp>
 #include <SynEditHighlighter.hpp>
 #include <SynEditKbdHandler.hpp>
+#include <SynEditCodeFolding.hpp>
 #include <System.WideStrUtils.hpp>
 #include <System.Math.hpp>
 #include <System.SysUtils.hpp>
@@ -154,6 +155,8 @@ typedef void __fastcall (__closure *TContextHelpEvent)(System::TObject* Sender, 
 typedef void __fastcall (__closure *TStatusChangeEvent)(System::TObject* Sender, TSynStatusChanges Changes);
 
 typedef void __fastcall (__closure *TMouseCursorEvent)(System::TObject* Sender, const Synedittypes::TBufferCoord &aLineCharPos, System::Uitypes::TCursor &aCursor);
+
+typedef void __fastcall (__closure *TScanForFoldRangesEvent)(System::TObject* Sender, Syneditcodefolding::TSynFoldRanges* FoldRanges, System::Classes::TStrings* LinesToScan, int FromLine, int ToLine);
 
 #pragma pack(push,4)
 class PASCALIMPLEMENTATION TSynEditMark : public System::TObject
@@ -297,6 +300,9 @@ private:
 	HIDESBASE MESSAGE void __fastcall WMSize(Winapi::Messages::TWMSize &Msg);
 	MESSAGE void __fastcall WMUndo(Winapi::Messages::TMessage &Msg);
 	HIDESBASE MESSAGE void __fastcall WMVScroll(Winapi::Messages::TWMScroll &Msg);
+	bool fUseCodeFolding;
+	Syneditcodefolding::TSynCodeFolding* fCodeFolding;
+	Syneditcodefolding::TSynFoldRanges* fAllFoldRanges;
 	bool fAlwaysShowCaret;
 	Synedittypes::TBufferCoord fBlockBegin;
 	Synedittypes::TBufferCoord fBlockEnd;
@@ -387,6 +393,7 @@ private:
 	TGutterGetTextEvent fOnGutterGetText;
 	TGutterPaintEvent fOnGutterPaint;
 	TStatusChangeEvent fOnStatusChange;
+	TScanForFoldRangesEvent fOnScanForFoldRanges;
 	bool fShowSpecChar;
 	int FPaintTransientLock;
 	bool FIsScrolling;
@@ -408,6 +415,9 @@ private:
 	int SelStartBeforeSearch;
 	int SelLengthBeforeSearch;
 	bool FWindowProducedMessage;
+	void __fastcall ReScanForFoldRanges(int FromLine, int ToLine);
+	void __fastcall FullFoldScan(void);
+	void __fastcall ScanForFoldRanges(Syneditcodefolding::TSynFoldRanges* FoldRanges, System::Classes::TStrings* LinesToScan, int FromLine, int ToLine);
 	void __fastcall BookMarkOptionsChanged(System::TObject* Sender);
 	void __fastcall ComputeCaret(int X, int Y);
 	void __fastcall ComputeScroll(int X, int Y);
@@ -445,7 +455,7 @@ private:
 	bool __fastcall GetWordWrap(void);
 	void __fastcall GutterChanged(System::TObject* Sender);
 	int __fastcall LeftSpaces(const System::UnicodeString Line);
-	int __fastcall LeftSpacesEx(const System::UnicodeString Line, bool WantTabs);
+	int __fastcall LeftSpacesEx(const System::UnicodeString Line, bool WantTabs, bool CalcAlways = false);
 	System::UnicodeString __fastcall GetLeftSpacing(int CharCount, bool WantTabs);
 	void __fastcall LinesChanging(System::TObject* Sender);
 	void __fastcall MoveCaretAndSelection(const Synedittypes::TBufferCoord &ptBefore, const Synedittypes::TBufferCoord &ptAfter, bool SelectionCommand);
@@ -514,6 +524,7 @@ private:
 	void __fastcall FindDialogFind(System::TObject* Sender);
 	System::LongBool __fastcall SearchByFindDialog(Vcl::Dialogs::TFindDialog* FindDialog);
 	void __fastcall FindDialogClose(System::TObject* Sender);
+	void __fastcall SetUseCodeFolding(const bool Value);
 	
 protected:
 	bool FIgnoreNextChar;
@@ -604,6 +615,7 @@ protected:
 	__property int InternalCaretY = {write=InternalSetCaretY, nodefault};
 	__property Synedittypes::TBufferCoord InternalCaretXY = {write=InternalSetCaretXY};
 	__property TSynFontSmoothMethod FontSmoothing = {read=fFontSmoothing, write=SetFontSmoothing, nodefault};
+	DYNAMIC void __fastcall ChangeScale(int M, int D, bool isDpiChange)/* overload */;
 	
 public:
 	__fastcall virtual TCustomSynEdit(System::Classes::TComponent* AOwner);
@@ -712,6 +724,17 @@ public:
 	void __fastcall RemoveLinesPointer(void);
 	void __fastcall HookTextBuffer(Synedittextbuffer::TSynEditStringList* aBuffer, Synedittextbuffer::TSynEditUndoList* aUndo, Synedittextbuffer::TSynEditUndoList* aRedo);
 	void __fastcall UnHookTextBuffer(void);
+	void __fastcall CollapseAll(void);
+	void __fastcall UncollapseAll(void);
+	void __fastcall Collapse(int FoldRangeIndex, bool Invalidate = true);
+	void __fastcall Uncollapse(int FoldRangeIndex, bool Invalidate = true);
+	void __fastcall UncollapseAroundLine(int Line);
+	void __fastcall CollapseNearest(void);
+	void __fastcall UncollapseNearest(void);
+	void __fastcall CollapseLevel(int Level);
+	void __fastcall UnCollapseLevel(int Level);
+	void __fastcall CollapseFoldType(int FoldType);
+	void __fastcall UnCollapseFoldType(int FoldType);
 	__property System::Sysutils::TSysCharSet AdditionalIdentChars = {read=FAdditionalIdentChars, write=SetAdditionalIdentChars};
 	__property System::Sysutils::TSysCharSet AdditionalWordBreakChars = {read=FAdditionalWordBreakChars, write=SetAdditionalWordBreakChars};
 	__property Synedittypes::TBufferCoord BlockBegin = {read=GetBlockBegin, write=SetBlockBegin};
@@ -756,6 +779,9 @@ public:
 	__property Synedittextbuffer::TSynEditUndoList* UndoList = {read=fUndoList};
 	__property Synedittextbuffer::TSynEditUndoList* RedoList = {read=fRedoList};
 	__property TProcessCommandEvent OnProcessCommand = {read=fOnProcessCommand, write=fOnProcessCommand};
+	__property Syneditcodefolding::TSynCodeFolding* CodeFolding = {read=fCodeFolding, write=fCodeFolding};
+	__property bool UseCodeFolding = {read=fUseCodeFolding, write=SetUseCodeFolding, nodefault};
+	__property Syneditcodefolding::TSynFoldRanges* AllFoldRanges = {read=fAllFoldRanges};
 	__property Syneditmiscclasses::TSynBookMarkOpt* BookMarkOptions = {read=fBookMarkOpt, write=fBookMarkOpt};
 	__property Vcl::Forms::TBorderStyle BorderStyle = {read=fBorderStyle, write=SetBorderStyle, default=1};
 	__property int ExtraLineSpacing = {read=fExtraLineSpacing, write=SetExtraLineSpacing, default=0};
@@ -799,12 +825,18 @@ public:
 	__property TStatusChangeEvent OnStatusChange = {read=fOnStatusChange, write=fOnStatusChange};
 	__property TPaintTransient OnPaintTransient = {read=fOnPaintTransient, write=fOnPaintTransient};
 	__property TScrollEvent OnScroll = {read=fOnScroll, write=fOnScroll};
+	__property TScanForFoldRangesEvent OnScanForFoldRanges = {read=fOnScanForFoldRanges, write=fOnScanForFoldRanges};
 	
 __published:
 	__property Cursor = {default=-4};
 	__property TCustomSynEditSearchNotFoundEvent OnSearchNotFound = {read=fSearchNotFound, write=fSearchNotFound};
 public:
 	/* TWinControl.CreateParented */ inline __fastcall TCustomSynEdit(HWND ParentWindow) : Vcl::Controls::TCustomControl(ParentWindow) { }
+	
+	/* Hoisted overloads: */
+	
+protected:
+	DYNAMIC inline void __fastcall  ChangeScale(int M, int D){ Vcl::Controls::TControl::ChangeScale(M, D); }
 	
 };
 
@@ -853,6 +885,8 @@ __published:
 	__property OnMouseWheelDown;
 	__property OnMouseWheelUp;
 	__property OnStartDrag;
+	__property CodeFolding;
+	__property UseCodeFolding;
 	__property BookMarkOptions;
 	__property BorderStyle = {default=1};
 	__property ExtraLineSpacing = {default=0};
@@ -901,6 +935,7 @@ __published:
 	__property OnSpecialLineColors;
 	__property OnStatusChange;
 	__property OnPaintTransient;
+	__property OnScanForFoldRanges;
 	__property FontSmoothing;
 public:
 	/* TCustomSynEdit.Create */ inline __fastcall virtual TSynEdit(System::Classes::TComponent* AOwner) : TCustomSynEdit(AOwner) { }

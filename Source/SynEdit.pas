@@ -75,9 +75,7 @@ uses
   SynEditKeyCmds,
   SynEditHighlighter,
   SynEditKbdHandler,
-//++ CodeFolding
   SynEditCodeFolding,
-//-- CodeFolding
   WideStrUtils,
   Math,
   SysUtils,
