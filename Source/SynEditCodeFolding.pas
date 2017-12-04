@@ -37,7 +37,7 @@ unit SynEditCodeFolding;
    Converting existing highlighters
    ================================
 
-   To Implement code folding a Highlighter must inherit from
+   To support code folding a Highlighter must inherit from
    TSynCustomCodeFoldingHighlighter and implement one abstact procedure
    ScanForFoldRanges(FoldRanges: TSynFoldRanges;
       LinesToScan: TStrings; FromLine: Integer; ToLine: Integer);
@@ -45,9 +45,9 @@ unit SynEditCodeFolding;
       FoldRanges.StartFoldRange
       FoldRanges.StopFoldRange
       FoldRanges.NoFoldInfo
-   It is called after the standard highlighter scanning has taken place
-   so one can use the Range information stored inside LinesToScan, which is
-   a TSynEditStringList, to avoid duplicating effort.
+   ScanForFoldRanges is called after the standard highlighter scanning has taken
+   place so one can use the Range information stored inside LinesToScan, which
+   is  a TSynEditStringList, to avoid duplicating effort.
 
    Initally two hightlighters have been converted SynHighlighterJScript and
    SynHighlighterPython, to serve as examples of adding code folding suppot to
@@ -90,7 +90,7 @@ unit SynEditCodeFolding;
 
    Improvements
    ============
-   Although the code folding infrastructure is fairly complete improvements
+   Although the code folding infrastructure is fairly complete, improvements
    can be made in providing the use with more painting options
    (folding hints etc.)
 
@@ -221,26 +221,44 @@ type
     property Ranges: TList<TSynFoldRange> read fRanges;
   end;
 
+  TSynCodeFoldingChangeEvent = procedure(Sender: TObject) of object;
+
   TSynCodeFolding = class(TPersistent)
     { Class to store and expose to the designer Code Folding properties }
   private
     fIndentGuides: Boolean;
-    fShowCollapsedLine: Boolean;
     fCollapsedLineColor: TColor;
     fFolderBarLinesColor: TColor;
     fIndentGuidesColor: TColor;
+    fShowCollapsedLine: Boolean;
+    fShowHintMark : Boolean;
+    fGutterShapeSize :  Integer;
+    fOnChange : TSynCodeFoldingChangeEvent;
+    procedure SetIndentGuides(const Value: Boolean);
+    procedure SetCollapsedLineColor(const Value: TColor);
+    procedure SetFolderBarLinesColor(const Value: TColor);
+    procedure SetIndentGuidesColor(const Value: TColor);
+    procedure SetShowCollapsedLine(const Value: Boolean);
+    procedure SetShowHintMark(const Value: Boolean);
+    procedure SetGutterShapeSize(const Value: Integer);
   public
     constructor Create;
+    property OnChange: TSynCodeFoldingChangeEvent read fOnChange write fOnChange;
   published
+    // Size of the gutter shapes in pixels at 96 PPI - had to be odd number
+    property  GutterShapeSize: Integer read fGutterShapeSize
+      write SetGutterShapeSize;
     property CollapsedLineColor: TColor read fCollapsedLineColor
-      write fCollapsedLineColor;
+      write SetCollapsedLineColor;
     property FolderBarLinesColor: TColor read fFolderBarLinesColor
-      write fFolderBarLinesColor;
-    property ShowCollapsedLine: Boolean read fShowCollapsedLine
-      write fShowCollapsedLine;
+      write SetFolderBarLinesColor;
     property IndentGuidesColor: TColor read fIndentGuidesColor
-      write fIndentGuidesColor;
-    property IndentGuides: Boolean read fIndentGuides write fIndentGuides;
+      write SetIndentGuidesColor;
+    property IndentGuides: Boolean read fIndentGuides write SetIndentGuides;
+    property ShowCollapsedLine: Boolean read fShowCollapsedLine
+      write SetShowCollapsedLine;
+    property ShowHintMark: Boolean read fShowHintMark
+      write SetShowHintMark;
   end;
 
   TSynCustomCodeFoldingHighlighter = class(TSynCustomHighlighter)
@@ -488,6 +506,9 @@ begin
 end;
 
 function TSynFoldRanges.FoldStartAtLine(Line: Integer; out Index: Integer): Boolean;
+{
+  If Result is False it Returns the First Index with Line greater than Line
+}
 begin
   Result := fRanges.BinarySearch(TSynFoldRange.Create(Line), Index);
 end;
@@ -833,10 +854,12 @@ end;
 constructor TSynCodeFolding.Create;
 begin
   fIndentGuides := True;
-  fShowCollapsedLine := True;
   fCollapsedLineColor := clGrayText;
   fFolderBarLinesColor := clGrayText;
   fIndentGuidesColor := clGray;
+  fShowCollapsedLine := False;
+  fShowHintMark := True;
+  fGutterShapeSize := 11;
 end;
 
 { TSynFoldRanges.TLineFoldInfo }
@@ -917,5 +940,69 @@ function TSynCustomCodeFoldingHighlighter.TabWidth(
 begin
   Result := TSynEditStringList(LinesToScan).TabWidth;
 end;
+
+{ TSynCodeFolding }
+
+procedure TSynCodeFolding.SetCollapsedLineColor(const Value: TColor);
+begin
+  if fCollapsedLineColor <> Value then begin
+    fCollapsedLineColor := Value;
+    if Assigned(fOnChange) then fOnChange(Self);
+  end;
+end;
+
+procedure TSynCodeFolding.SetFolderBarLinesColor(const Value: TColor);
+begin
+  if fFolderBarLinesColor <> Value then begin
+    fFolderBarLinesColor := Value;
+    if Assigned(fOnChange) then fOnChange(Self);
+  end;
+end;
+
+procedure TSynCodeFolding.SetGutterShapeSize(const Value: Integer);
+Var
+  NewValue: Integer;
+begin
+  NewValue := Value;
+  if not Odd(NewValue) then
+    Dec(NewValue);
+  if fGutterShapeSize <> NewValue then begin
+    fGutterShapeSize := NewValue;
+    if Assigned(fOnChange) then fOnChange(Self);
+  end;
+end;
+
+procedure TSynCodeFolding.SetIndentGuides(const Value: Boolean);
+begin
+  if fIndentGuides <> Value then begin
+    fIndentGuides := Value;
+    if Assigned(fOnChange) then fOnChange(Self);
+  end;
+end;
+
+procedure TSynCodeFolding.SetIndentGuidesColor(const Value: TColor);
+begin
+  if fIndentGuidesColor <> Value then begin
+    fIndentGuidesColor := Value;
+    if Assigned(fOnChange) then fOnChange(Self);
+  end;
+end;
+
+procedure TSynCodeFolding.SetShowHintMark(const Value: Boolean);
+begin
+  if fShowHintMark <> Value then begin
+    fShowHintMark := Value;
+    if Assigned(fOnChange) then fOnChange(Self);
+  end;
+end;
+
+procedure TSynCodeFolding.SetShowCollapsedLine(const Value: Boolean);
+begin
+  if fShowCollapsedLine <> Value then begin
+    fShowCollapsedLine := Value;
+    if Assigned(fOnChange) then fOnChange(Self);
+  end;
+end;
+
 
 end.

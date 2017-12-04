@@ -90,6 +90,7 @@ type
     fZeroStart: boolean;
     fLeftOffset: integer;
     fRightOffset: integer;
+    fRightMargin: integer;
     fOnChange: TNotifyEvent;
     fCursor: TCursor;
     fVisible: boolean;
@@ -109,6 +110,7 @@ type
     procedure SetLeadingZeros(const Value: boolean);
     procedure SetLeftOffset(Value: integer);
     procedure SetRightOffset(Value: integer);
+    procedure SetRightMargin(Value: integer);
     procedure SetShowLineNumbers(const Value: boolean);
     procedure SetUseFontStyle(Value: boolean);
     procedure SetVisible(Value: boolean);
@@ -148,6 +150,8 @@ type
     property LeftOffset: integer read fLeftOffset write SetLeftOffset
       default 16;
     property RightOffset: integer read fRightOffset write SetRightOffset
+      default 2;
+    property RightMargin: integer read fRightMargin write SetRightMargin
       default 2;
     property ShowLineNumbers: boolean read fShowLineNumbers
       write SetShowLineNumbers default FALSE;
@@ -430,6 +434,7 @@ begin
  fWidth := MulDiv(fWidth, M, D);
  fLeftOffset := MulDiv(fLeftOffset, M, D);
  fRightOffset := MulDiv(fRightOffset, M, D);
+ fRightMargin := MulDiv(fRightMargin, M, D);
  fFont.Height := MulDiv(fFont.Height, M, D);
  if Assigned(fOnChange) then fOnChange(Self);
 end;
@@ -452,6 +457,7 @@ begin
   fDigitCount := 4;
   fAutoSizeDigitCount := fDigitCount;
   fRightOffset := 2;
+  fRightMargin := 2;
   fBorderColor := clWindow;
   fBorderStyle := gbsMiddle;
   fLineNumberStart := 1;
@@ -486,6 +492,7 @@ begin
     fLeftOffset := Src.fLeftOffset;
     fDigitCount := Src.fDigitCount;
     fRightOffset := Src.fRightOffset;
+    fRightMargin := Src.fRightMargin;
     fAutoSize := Src.fAutoSize;
     fAutoSizeDigitCount := Src.fAutoSizeDigitCount;
     fLineNumberStart := Src.fLineNumberStart;
@@ -542,7 +549,7 @@ begin
   if not fVisible then
     Result := 0
   else if fShowLineNumbers then
-    Result := fLeftOffset + fRightOffset + fAutoSizeDigitCount * CharWidth + 2
+    Result := fLeftOffset + fRightOffset + fAutoSizeDigitCount * CharWidth + fRightMargin
   else
     Result := fWidth;
 end;
@@ -605,6 +612,15 @@ begin
   Value := Max(0, Value);
   if fRightOffset <> Value then begin
     fRightOffset := Value;
+    if Assigned(fOnChange) then fOnChange(Self);
+  end;
+end;
+
+procedure TSynGutter.SetRightMargin(Value: integer);
+begin
+  Value := Max(0, Value);
+  if fRightMargin <> Value then begin
+    fRightMargin := Value;
     if Assigned(fOnChange) then fOnChange(Self);
   end;
 end;
