@@ -4036,6 +4036,9 @@ begin
         end;
         fCaretY := Value.Line;
         Include(fStatusChanges, scCaretY);
+//++ CodeFolding
+        UncollapseAroundLine(fCaretY);
+//-- CodeFolding
       end;
       // Call UpdateLastCaretX before DecPaintLock because the event handler it
       // calls could raise an exception, and we don't want fLastCaretX to be
