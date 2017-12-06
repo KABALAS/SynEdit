@@ -1,4 +1,4 @@
-{-------------------------------------------------------------------------------
+﻿{-------------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -5839,10 +5839,12 @@ begin
 
       // Redraw fold mark
       InvalidateGutterLines(FromLine, MaxInt);
-    end;
+
+      UpdateScrollBars;
+    end else
+      // Update Scrollbars
+      Include(fStateFlags, sfScrollbarChanged);
   end;
-  // Update Scrollbars
-  Include(fStateFlags, sfScrollbarChanged);
 end;
 
 procedure TCustomSynEdit.CollapseAll;
@@ -5916,11 +5918,12 @@ begin
     InvalidateGutterLines(FromLine, MaxInt);
 
     // Make sure we can see the cursor
-//    EnsureCursorPosVisible;
+    // EnsureCursorPosVisible;
 
+    UpdateScrollBars;
+  end else
     // Update Scrollbars
     Include(fStateFlags, sfScrollbarChanged);
-  end;
 end;
 
 procedure TCustomSynEdit.UncollapseAroundLine(Line: Integer);
@@ -10435,9 +10438,10 @@ begin
     Result := Highlighter.IsWordBreakChar(AChar)
   else
     case AChar of
-      #0..#32, '.', ',', ';', ':', '"', '''', '�', '`', '�', '^', '!', '?', '&',
-      '$', '@', '�', '%', '#', '~', '[', ']', '(', ')', '{', '}', '<', '>',
-      '-', '=', '+', '*', '/', '\', '|':
+      #0..#32, '.', ',', ';', ':', '"', '''', WideChar(#$00B4), '`',
+      WideChar(#$00B0), '^', '!', '?', '&', '$', '@', WideChar(#$00A7), '%',
+      '#', '~', '[', ']', '(', ')', '{', '}', '<', '>', '-', '=', '+', '*',
+      '/', '\', '|':
         Result := True;
       else
         Result := False;
