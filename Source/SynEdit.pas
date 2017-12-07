@@ -5467,6 +5467,7 @@ begin
 //-- CodeFolding
 
   InvalidateLines(Index + 1, vEndLine);
+  InvalidateGutterLines(Index + 1, vEndLine);
 
   if (eoAutoSizeMaxScrollWidth in fOptions) then
   begin
