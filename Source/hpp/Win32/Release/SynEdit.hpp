@@ -525,6 +525,9 @@ private:
 	System::LongBool __fastcall SearchByFindDialog(Vcl::Dialogs::TFindDialog* FindDialog);
 	void __fastcall FindDialogClose(System::TObject* Sender);
 	void __fastcall SetUseCodeFolding(const bool Value);
+	void __fastcall OnCodeFoldingChange(System::TObject* Sender);
+	System::Types::TRect __fastcall GetCollapseMarkRect(int Row, int Line = 0xffffffff);
+	System::Types::TRect __fastcall GetFoldShapeRect(int Row);
 	
 protected:
 	bool FIgnoreNextChar;

@@ -90,6 +90,7 @@ private:
 	bool fZeroStart;
 	int fLeftOffset;
 	int fRightOffset;
+	int fRightMargin;
 	System::Classes::TNotifyEvent fOnChange;
 	System::Uitypes::TCursor fCursor;
 	bool fVisible;
@@ -109,6 +110,7 @@ private:
 	void __fastcall SetLeadingZeros(const bool Value);
 	void __fastcall SetLeftOffset(int Value);
 	void __fastcall SetRightOffset(int Value);
+	void __fastcall SetRightMargin(int Value);
 	void __fastcall SetShowLineNumbers(const bool Value);
 	void __fastcall SetUseFontStyle(bool Value);
 	void __fastcall SetVisible(bool Value);
@@ -144,6 +146,7 @@ __published:
 	__property bool LeadingZeros = {read=fLeadingZeros, write=SetLeadingZeros, default=0};
 	__property int LeftOffset = {read=fLeftOffset, write=SetLeftOffset, default=16};
 	__property int RightOffset = {read=fRightOffset, write=SetRightOffset, default=2};
+	__property int RightMargin = {read=fRightMargin, write=SetRightMargin, default=2};
 	__property bool ShowLineNumbers = {read=fShowLineNumbers, write=SetShowLineNumbers, default=0};
 	__property bool UseFontStyle = {read=fUseFontStyle, write=SetUseFontStyle, default=1};
 	__property bool Visible = {read=fVisible, write=SetVisible, default=1};

@@ -121,14 +121,19 @@ private:
 public:
 	__fastcall TSynFoldRanges(void);
 	__fastcall virtual ~TSynFoldRanges(void);
-	bool __fastcall FoldStartAtLine(int Line, /* out */ int &Index);
-	bool __fastcall CollapsedFoldStartAtLine(int Line, /* out */ int &Index);
-	bool __fastcall FoldEndAtLine(int Line, /* out */ int &Index);
+	bool __fastcall FoldStartAtLine(int Line)/* overload */;
+	bool __fastcall FoldStartAtLine(int Line, /* out */ int &Index)/* overload */;
+	bool __fastcall CollapsedFoldStartAtLine(int Line)/* overload */;
+	bool __fastcall CollapsedFoldStartAtLine(int Line, /* out */ int &Index)/* overload */;
+	bool __fastcall FoldEndAtLine(int Line)/* overload */;
+	bool __fastcall FoldEndAtLine(int Line, /* out */ int &Index)/* overload */;
 	bool __fastcall FoldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine, /* out */ int &Index);
-	bool __fastcall CollapsedFoldAroundLine(int Line, /* out */ int &Index);
-	bool __fastcall FoldAroundLine(int Line, /* out */ int &Index);
-	bool __fastcall FoldHidesLine(int Line, /* out */ int &Index);
-	bool __fastcall FoldExtendsLine(int Line, /* out */ int &Index);
+	bool __fastcall CollapsedFoldAroundLine(int Line)/* overload */;
+	bool __fastcall CollapsedFoldAroundLine(int Line, /* out */ int &Index)/* overload */;
+	bool __fastcall FoldAroundLine(int Line)/* overload */;
+	bool __fastcall FoldAroundLine(int Line, /* out */ int &Index)/* overload */;
+	bool __fastcall FoldHidesLine(int Line)/* overload */;
+	bool __fastcall FoldHidesLine(int Line, /* out */ int &Index)/* overload */;
 	System::DynamicArray<int> __fastcall FoldsAtLevel(int Level);
 	System::DynamicArray<int> __fastcall FoldsOfType(int aType);
 	void __fastcall StoreCollapsedState(void);
@@ -157,33 +162,47 @@ public:
 
 #pragma pack(pop)
 
-#pragma pack(push,4)
+typedef void __fastcall (__closure *TSynCodeFoldingChangeEvent)(System::TObject* Sender);
+
 class PASCALIMPLEMENTATION TSynCodeFolding : public System::Classes::TPersistent
 {
 	typedef System::Classes::TPersistent inherited;
 	
 private:
 	bool fIndentGuides;
-	bool fShowCollapsedLine;
 	System::Uitypes::TColor fCollapsedLineColor;
 	System::Uitypes::TColor fFolderBarLinesColor;
 	System::Uitypes::TColor fIndentGuidesColor;
+	bool fShowCollapsedLine;
+	bool fShowHintMark;
+	int fGutterShapeSize;
+	TSynCodeFoldingChangeEvent fOnChange;
+	void __fastcall SetIndentGuides(const bool Value);
+	void __fastcall SetCollapsedLineColor(const System::Uitypes::TColor Value);
+	void __fastcall SetFolderBarLinesColor(const System::Uitypes::TColor Value);
+	void __fastcall SetIndentGuidesColor(const System::Uitypes::TColor Value);
+	void __fastcall SetShowCollapsedLine(const bool Value);
+	void __fastcall SetShowHintMark(const bool Value);
+	void __fastcall SetGutterShapeSize(const int Value);
 	
 public:
 	__fastcall TSynCodeFolding(void);
+	virtual void __fastcall Assign(System::Classes::TPersistent* Source);
+	__property TSynCodeFoldingChangeEvent OnChange = {read=fOnChange, write=fOnChange};
 	
 __published:
-	__property System::Uitypes::TColor CollapsedLineColor = {read=fCollapsedLineColor, write=fCollapsedLineColor, nodefault};
-	__property System::Uitypes::TColor FolderBarLinesColor = {read=fFolderBarLinesColor, write=fFolderBarLinesColor, nodefault};
-	__property bool ShowCollapsedLine = {read=fShowCollapsedLine, write=fShowCollapsedLine, nodefault};
-	__property System::Uitypes::TColor IndentGuidesColor = {read=fIndentGuidesColor, write=fIndentGuidesColor, nodefault};
-	__property bool IndentGuides = {read=fIndentGuides, write=fIndentGuides, nodefault};
+	__property int GutterShapeSize = {read=fGutterShapeSize, write=SetGutterShapeSize, nodefault};
+	__property System::Uitypes::TColor CollapsedLineColor = {read=fCollapsedLineColor, write=SetCollapsedLineColor, nodefault};
+	__property System::Uitypes::TColor FolderBarLinesColor = {read=fFolderBarLinesColor, write=SetFolderBarLinesColor, nodefault};
+	__property System::Uitypes::TColor IndentGuidesColor = {read=fIndentGuidesColor, write=SetIndentGuidesColor, nodefault};
+	__property bool IndentGuides = {read=fIndentGuides, write=SetIndentGuides, nodefault};
+	__property bool ShowCollapsedLine = {read=fShowCollapsedLine, write=SetShowCollapsedLine, nodefault};
+	__property bool ShowHintMark = {read=fShowHintMark, write=SetShowHintMark, nodefault};
 public:
 	/* TPersistent.Destroy */ inline __fastcall virtual ~TSynCodeFolding(void) { }
 	
 };
 
-#pragma pack(pop)
 
 class PASCALIMPLEMENTATION TSynCustomCodeFoldingHighlighter : public Synedithighlighter::TSynCustomHighlighter
 {
@@ -198,6 +217,7 @@ protected:
 public:
 	virtual void __fastcall InitFoldRanges(TSynFoldRanges* FoldRanges);
 	virtual void __fastcall ScanForFoldRanges(TSynFoldRanges* FoldRanges, System::Classes::TStrings* LinesToScan, int FromLine, int ToLine) = 0 ;
+	virtual void __fastcall AdjustFoldRanges(TSynFoldRanges* FoldRanges, System::Classes::TStrings* LinesToScan);
 public:
 	/* TSynCustomHighlighter.Create */ inline __fastcall virtual TSynCustomCodeFoldingHighlighter(System::Classes::TComponent* AOwner) : Synedithighlighter::TSynCustomHighlighter(AOwner) { }
 	/* TSynCustomHighlighter.Destroy */ inline __fastcall virtual ~TSynCustomCodeFoldingHighlighter(void) { }
