@@ -12,7 +12,7 @@ The Original Code is: SynEdit.pas, released 2000-04-07.
 The Original Code is based on mwCustomEdit.pas by Martin Waldenburg, part of
 the mwEdit component suite.
 Portions created by Martin Waldenburg are Copyright (C) 1998 Martin Waldenburg.
-Unicode translation by Maël Hörz.
+Unicode translation by Maï¿½l Hï¿½rz.
 All Rights Reserved.
 
 Contributors to the SynEdit and mwEdit projects are listed in the
@@ -2033,6 +2033,9 @@ begin
 //++ CodeFolding
   if (sfLinesChanging in fStateFlags) and fAllFoldRanges.StopScanning(fLines) then
   begin
+    if Assigned(fHighlighter) and (fHighlighter is TSynCustomCodeFoldingHighlighter) then
+      TSynCustomCodeFoldingHighlighter(fHighlighter).AdjustFoldRanges(AllFoldRanges,
+      fLines);
     InvalidateGutter;
     Include(fStateFlags, sfScrollbarChanged);
   end;
@@ -10432,8 +10435,8 @@ begin
     Result := Highlighter.IsWordBreakChar(AChar)
   else
     case AChar of
-      #0..#32, '.', ',', ';', ':', '"', '''', '´', '`', '°', '^', '!', '?', '&',
-      '$', '@', '§', '%', '#', '~', '[', ']', '(', ')', '{', '}', '<', '>',
+      #0..#32, '.', ',', ';', ':', '"', '''', 'ï¿½', '`', 'ï¿½', '^', '!', '?', '&',
+      '$', '@', 'ï¿½', '%', '#', '~', '[', ']', '(', ')', '{', '}', '<', '>',
       '-', '=', '+', '*', '/', '\', '|':
         Result := True;
       else
@@ -10778,6 +10781,8 @@ begin
      and StopScanning will be called when LinesChanged is executed }
   if not (sfLinesChanging in fStateFlags) and fAllFoldRanges.StopScanning(fLines) then
   begin
+    TSynCustomCodeFoldingHighlighter(fHighlighter).AdjustFoldRanges(AllFoldRanges,
+      fLines);
     InvalidateGutter;
     Include(fStateFlags, sfScrollbarChanged);
   end;
