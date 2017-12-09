@@ -550,6 +550,8 @@ begin
     Result := 0
   else if fShowLineNumbers then
     Result := fLeftOffset + fRightOffset + fAutoSizeDigitCount * CharWidth + fRightMargin
+  else if fAutoSize then
+    Result := fLeftOffset + fRightOffset + fRightMargin
   else
     Result := fWidth;
 end;
